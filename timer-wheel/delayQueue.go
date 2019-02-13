@@ -3,7 +3,7 @@ package timer_wheel
 import (
 	"sync"
 	"time"
-	"cock/syn"
+	"roast_mutton/syn"
 )
 
 //延迟队列
