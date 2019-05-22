@@ -1,6 +1,8 @@
 package core
 
-import "sync"
+import (
+	"sync"
+)
 
 type LinkedList struct {
 	head *Node
@@ -40,7 +42,6 @@ func (list *LinkedList) Add(data interface{}) *Node {
 //已增加parent的空间代价换取删除的效率O(1)
 func (node *Node) Delete() *Node {
 	node.parent.Lock.Lock()
-
 	if node.Predecessor == nil {
 		node.parent.head = nil
 	} else {
@@ -50,5 +51,19 @@ func (node *Node) Delete() *Node {
 		}
 	}
 	node.parent.Lock.Unlock()
+	node.parent=nil
+	return node
+}
+
+func (node *Node) Join(parent *LinkedList) *Node  {
+	parent.Lock.Lock()
+	if parent.tail != nil {
+		parent.tail.Successor = node
+		node.Successor = parent.tail
+	} else {
+		parent.head = node
+		parent.tail = node
+	}
+	parent.Lock.Unlock()
 	return node
 }
