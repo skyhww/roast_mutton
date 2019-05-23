@@ -22,14 +22,14 @@ func TestUnboundDelayQueue(test *testing.T) {
 	go func() {
 		log.Println(http.ListenAndServe("localhost:18080", nil))
 	}()
-	qps := 2000
+	qps := 500
 	ch := make(chan int, qps)
 	go func() {
 		for {
 		lab:
 			i := 0
 			select {
-			case <-time.After(time.Second):
+			case <-time.After(time.Millisecond*50):
 				for {
 					select {
 					case <-ch:
@@ -42,11 +42,11 @@ func TestUnboundDelayQueue(test *testing.T) {
 			}
 		}
 	}()
-	for j := 0; j < 1000; j++ {
+	for j := 0; j < 10; j++ {
 		go func() {
 			for true {
 				ch <- 1
-				ex := time.Now().Add(time.Duration(30) * time.Millisecond)
+				ex := time.Now().Add(time.Duration(300) * time.Millisecond)
 				queue.Add(&ExpireElement{ExpireAt: &ex})
 				atomic.AddInt32(&added, 1)
 			}
@@ -67,10 +67,6 @@ func TestUnboundDelayQueue(test *testing.T) {
 			}
 		}()
 	}
-	time.Sleep(time.Duration(2) * time.Minute)
-	fmt.Println(count)
-	fmt.Println(expired)
-	fmt.Println(added)
 }
 
 type Integer struct {
@@ -109,41 +105,3 @@ func TestUnboundDelayQueue_Poll(t *testing.T) {
 		fmt.Println(e.Value)
 	}
 }
-
-/*func TestUnboundDelayQueue_PollV2(t *testing.T) {
-	runtime.GOMAXPROCS(2)
-	a:=time.Duration(100) * time.Millisecond
-	b := time.NewTimer(a)
-
-	select {
-	case <-b.C:
-		fmt.Println("ok")
-	}
-
-	//var count int32
-	var expired int32
-	queue := &UnboundDelayQueue{Ch:make(chan int,1),Lock: &sync.Mutex{}, Threshold: 30, ChanList: &LinkedList{Lock: &sync.Mutex{}}}
-	go func() {
-		log.Println(http.ListenAndServe("localhost:18080", nil))
-	}()
-	for j := 0; j < 100; j++ {
-		go func() {
-			for true {
-				ex := time.Now().Add(time.Duration(300) * time.Millisecond)
-				queue.AddV2(&ExpireElement{ExpireAt: &ex})
-				time.Sleep(time.Duration(100) * time.Millisecond)
-			}
-		}()
-	}
-
-	for j := 0; j < 10; j++ {
-		go func() {
-			for true {
-				e := time.Duration(100) * time.Millisecond
-				fmt.Println(queue.PollV2(&e))
-			}
-		}()
-	}
-	time.Sleep(time.Duration(2) * time.Minute)
-	fmt.Println(expired)
-}*/
